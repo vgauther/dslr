@@ -18,6 +18,33 @@ from dslr import (
 )
 
 
+def replace_nan_by_mean(df):
+    for col in df:
+        values = df[col].tolist()
+
+        total = 0
+        count = 0
+
+        i = 0
+        while i < len(values):
+            v = values[i]
+            if v == v:  # pas NaN
+                total += v
+                count += 1
+            i += 1
+
+        mean = total / count
+
+        i = 0
+        while i < len(values):
+            if values[i] != values[i]:  # NaN
+                values[i] = mean
+            i += 1
+
+        df[col] = values
+
+    return df
+
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
@@ -44,15 +71,15 @@ def somme_pondere(weights, notes):
 
 
 def update_weights(weights, x, is_good_house, learning_rate):
-    sp = somme_pondere(weights, x[1::])
+    sp = somme_pondere(weights, x)
     prediction = sigmoid(sp)
 
     error = prediction - is_good_house
     weights[0] -= learning_rate * error
 
-    i = 1
+    i = 0
     while i < len(x):
-        weights[i] = weights[i] - learning_rate * error * x[i]
+        weights[i + 1] = weights[i + 1] - learning_rate * error * x[i]
         i += 1
 
     return weights
@@ -128,18 +155,21 @@ def main():
         if extra:
             print("Unexpected columns:", extra)
         return
-
+    
+    houses = df["Hogwarts House"]
     features_df = df.drop(columns=IGNORED_COLUMNS)
-    features_df = features_df.dropna()
+    features_df = replace_nan_by_mean(features_df)
     features_df = normalize_dataframe(features_df, SUBJECTS)
 
+    houses = houses.values.tolist()
     students_scores = features_df.values.tolist()
     final_weights = {}
     for h in HOUSE_TO_LABEL:
         weights = initialize_weights(len(SUBJECTS))
         for _ in range(epochs):
-            for stud in students_scores:
-                weights = update_weights(weights, stud, is_good_house(h, stud[0]), rate)
+            for stud, house in zip(students_scores, houses):
+                igh = is_good_house(h, house)
+                weights = update_weights(weights, stud, igh, rate)
         final_weights[h] = weights
 
     save_weights(final_weights, "save.json")

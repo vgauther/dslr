@@ -9,7 +9,6 @@ import pandas as pd
 
 from dslr import HOUSE_TO_LABEL, IGNORED_COLUMNS, PATH_WEIGHT, SUBJECTS
 
-
 def replace_nan_by_mean(df):
     for col in df:
         values = df[col].tolist()
