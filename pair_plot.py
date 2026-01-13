@@ -29,7 +29,7 @@ def main():
     nums = [c for c in df.select_dtypes(include="number").columns if c != "Index"]
     n = len(nums)
 
-    colors = df["Hogwarts House"].map(lambda x: HOUSE_COLORS.get(x, "black"))
+    colors = df["Hogwarts House"].map(lambda x: HOUSE_COLORS.get(x, "gray"))
     _, axes = plt.subplots(n, n, figsize=(n, n))
 
     for i in range(n):
@@ -43,7 +43,9 @@ def main():
                 axes[i, j].set_frame_on(False)
                 continue
             if i == j:
-                axes[i, j].hist(df[nums[i]].dropna(), bins=20, alpha=0.6)
+                for house, color in HOUSE_COLORS.items():
+                    data = df.loc[df["Hogwarts House"] == house, nums[i]].dropna()
+                    axes[i, j].hist(data, bins=20, color=color, alpha=0.6)
             else:
                 axes[i, j].scatter(df[nums[j]], df[nums[i]], c=colors, s=20, alpha=0.6)
             if i == n - 1:
