@@ -28,7 +28,9 @@ IGNORED_COLUMNS = [
 SUBJECTS = [c for c in EXPECTED_COLUMNS 
             if c not in IGNORED_COLUMNS and c != "Hogwarts House"]
 
-EPOCHS = 100
+EPOCHS = 50
+
+LEARNING_RATE = float(0.00001)
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
@@ -45,26 +47,30 @@ def initialize_weights(num_features):
 
 def somme_pondere(weights, notes):
     bias = weights[0]
-    i = 1
+    i = 0
     sp = bias
     while i < len(notes):
-        sp = sp + (notes[i] * weights[i])
+        sp = sp + (notes[i] * weights[i+1])
         i = i + 1
     return sp
 
 def update_weights(weights, x, is_good_house):
-    sp = somme_pondere(weights, x)
+    sp = somme_pondere(weights, x[1::])
     prediction = sigmoid(sp)
 
     error = prediction - is_good_house
-    weights[0] += error
+    weights[0] -= LEARNING_RATE * error
 
 
+    i = 1
+    while i < len(x):
+        weights[i] = weights[i] - LEARNING_RATE * error * x[i]
+        i += 1
 
     return weights
 
 def is_good_house(current, real):
-    return current == real
+    return 1 if current == real else 0
 
 def save_weights(all_weights, filename):
     data = {}
@@ -81,6 +87,34 @@ def save_weights(all_weights, filename):
 def usage():
     print("Usage: python3 logreg_train.py <dataset.csv>")
     sys.exit(1)
+
+def normalize_dataframe(df, subjects):
+    for col in subjects:
+        values = df[col].tolist()
+
+        # Calcul de la moyenne
+        total = 0
+        count = 0
+        for v in values:
+            total += v
+            count += 1
+        mean = total / count
+
+        # Calcul de l'écart-type
+        var = 0
+        for v in values:
+            var += (v - mean) ** 2
+        std = (var / count) ** 0.5
+
+        # Normalisation
+        i = 0
+        while i < len(values):
+            values[i] = (values[i] - mean) / std
+            i += 1
+
+        df[col] = values
+
+    return df
 
 def main():
 
@@ -109,6 +143,8 @@ def main():
     
     features_df = df.drop(columns=IGNORED_COLUMNS)
     features_df = features_df.dropna()
+    features_df = normalize_dataframe(features_df, SUBJECTS)
+
     students_scores = features_df.values.tolist()
     final_weights = {}
     for h in HOUSE_TO_LABEL:
