@@ -1,39 +1,26 @@
-import sys
-import pandas as pd
-import numpy as np
+#!/usr/bin/env python
+
+
 import json
+import os
+import sys
 
-HOUSE_TO_LABEL = {
-    "Gryffindor": 0,
-    "Slytherin": 1,
-    "Ravenclaw": 2,
-    "Hufflepuff": 3
-}
+import numpy as np
+import pandas as pd
 
-EXPECTED_COLUMNS = [
-    "Index", "Hogwarts House", "First Name", "Last Name",
-    "Birthday", "Best Hand",
-    "Arithmancy", "Astronomy", "Herbology",
-    "Defense Against the Dark Arts", "Divination",
-    "Muggle Studies", "Ancient Runes", "History of Magic",
-    "Transfiguration", "Potions",
-    "Care of Magical Creatures", "Charms", "Flying"
-]
+from dslr import (
+    EPOCHS,
+    EXPECTED_COLUMNS,
+    HOUSE_TO_LABEL,
+    IGNORED_COLUMNS,
+    LEARNING_RATE,
+    SUBJECTS,
+)
 
-IGNORED_COLUMNS = [
-    "Index", "First Name",
-    "Last Name", "Birthday", "Best Hand"
-]
-
-SUBJECTS = [c for c in EXPECTED_COLUMNS 
-            if c not in IGNORED_COLUMNS and c != "Hogwarts House"]
-
-EPOCHS = 50
-
-LEARNING_RATE = float(0.00001)
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
+
 
 def initialize_weights(num_features):
     weights = []
@@ -45,48 +32,45 @@ def initialize_weights(num_features):
 
     return weights
 
+
 def somme_pondere(weights, notes):
     bias = weights[0]
     i = 0
     sp = bias
     while i < len(notes):
-        sp = sp + (notes[i] * weights[i+1])
+        sp = sp + (notes[i] * weights[i + 1])
         i = i + 1
     return sp
 
-def update_weights(weights, x, is_good_house):
+
+def update_weights(weights, x, is_good_house, learning_rate):
     sp = somme_pondere(weights, x[1::])
     prediction = sigmoid(sp)
 
     error = prediction - is_good_house
-    weights[0] -= LEARNING_RATE * error
-
+    weights[0] -= learning_rate * error
 
     i = 1
     while i < len(x):
-        weights[i] = weights[i] - LEARNING_RATE * error * x[i]
+        weights[i] = weights[i] - learning_rate * error * x[i]
         i += 1
 
     return weights
 
+
 def is_good_house(current, real):
     return 1 if current == real else 0
+
 
 def save_weights(all_weights, filename):
     data = {}
 
     for house in all_weights:
-        data[house] = {
-            "bias": all_weights[house][0],
-            "weights": all_weights[house][1:]
-        }
+        data[house] = {"bias": all_weights[house][0], "weights": all_weights[house][1:]}
 
     with open(filename, "w") as f:
         json.dump(data, f, indent=4)
 
-def usage():
-    print("Usage: python3 logreg_train.py <dataset.csv>")
-    sys.exit(1)
 
 def normalize_dataframe(df, subjects):
     for col in subjects:
@@ -116,12 +100,16 @@ def normalize_dataframe(df, subjects):
 
     return df
 
-def main():
 
-    if len(sys.argv) != 2:
-        usage()
+def main():
+    if len(sys.argv) < 2:
+        filename = os.path.basename(__file__)
+        print(f"Usage: python3 {filename} <dataset.csv> [learning_rate] [epochs]")
+        sys.exit(1)
 
     file_path = sys.argv[1]
+    rate = float(sys.argv[2]) if len(sys.argv) > 2 else LEARNING_RATE
+    epochs = int(sys.argv[3]) if len(sys.argv) > 3 else EPOCHS
 
     try:
         df = pd.read_csv(file_path)
@@ -140,7 +128,7 @@ def main():
         if extra:
             print("Unexpected columns:", extra)
         return
-    
+
     features_df = df.drop(columns=IGNORED_COLUMNS)
     features_df = features_df.dropna()
     features_df = normalize_dataframe(features_df, SUBJECTS)
@@ -149,14 +137,13 @@ def main():
     final_weights = {}
     for h in HOUSE_TO_LABEL:
         weights = initialize_weights(len(SUBJECTS))
-        for i in range(EPOCHS):
+        for _ in range(epochs):
             for stud in students_scores:
-                weights = update_weights(weights, stud, is_good_house(h, stud[0]))
+                weights = update_weights(weights, stud, is_good_house(h, stud[0]), rate)
         final_weights[h] = weights
-    
+
     print(final_weights)
     save_weights(final_weights, "save.json")
-
 
 
 if __name__ == "__main__":

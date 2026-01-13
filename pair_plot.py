@@ -6,12 +6,7 @@ import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 
-HOUSE_COLORS = {
-    "Gryffindor": "red",
-    "Hufflepuff": "yellow",
-    "Ravenclaw": "blue",
-    "Slytherin": "green",
-}
+from dslr import HOUSE_COLORS
 
 
 def main():

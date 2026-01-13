@@ -3,37 +3,12 @@
 import json
 import os
 import sys
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-HOUSE_TO_LABEL = {
-    "Gryffindor": 0,
-    "Slytherin": 1,
-    "Ravenclaw": 2,
-    "Hufflepuff": 3
-}
+from dslr import HOUSE_TO_LABEL, IGNORED_COLUMNS, PATH_WEIGHT, SUBJECTS
 
-PATH_WEIGHT = Path("save.json")
-
-EXPECTED_COLUMNS = [
-    "Index", "Hogwarts House", "First Name", "Last Name",
-    "Birthday", "Best Hand",
-    "Arithmancy", "Astronomy", "Herbology",
-    "Defense Against the Dark Arts", "Divination",
-    "Muggle Studies", "Ancient Runes", "History of Magic",
-    "Transfiguration", "Potions",
-    "Care of Magical Creatures", "Charms", "Flying"
-]
-
-IGNORED_COLUMNS = [
-    "Index", "Hogwarts House","First Name",
-    "Last Name", "Birthday", "Best Hand"
-]
-
-SUBJECTS = [c for c in EXPECTED_COLUMNS 
-            if c not in IGNORED_COLUMNS and c != "Hogwarts House"]
 
 def replace_nan_by_mean(df):
     for col in df:
@@ -62,6 +37,7 @@ def replace_nan_by_mean(df):
 
     return df
 
+
 def load_weights_as_arrays(data):
 
     all_weights = {}
@@ -70,28 +46,31 @@ def load_weights_as_arrays(data):
         bias = data[house]["bias"]
         weights = data[house]["weights"]
 
-        # Tableau final : [bias, w1, w2, ...]
         all_weights[house] = [bias] + weights
 
     return all_weights
 
+
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
+
 
 def somme_pondere(weights, notes):
     bias = weights[0]
     i = 0
     sp = bias
     while i < len(notes):
-        sp = sp + (notes[i] * weights[i+1])
+        sp = sp + (notes[i] * weights[i + 1])
         i = i + 1
     return sp
+
 
 def predict(weights, notes):
     sp = somme_pondere(weights, notes)
     ret = sigmoid(sp)
     print(ret)
     return ret
+
 
 def create_dict_array(size):
     arr = []
@@ -103,7 +82,8 @@ def create_dict_array(size):
 
     return arr
 
-def get_best_house(d):
+
+def get_best_house(d: dict):
     best_house = None
     best_value = -1
 
@@ -111,8 +91,8 @@ def get_best_house(d):
         if d[house] > best_value:
             best_value = d[house]
             best_house = house
+    return best_house if best_house else "None"
 
-    return best_house
 
 def write_houses_csv(results, filename):
     f = open(filename, "w")
@@ -126,6 +106,7 @@ def write_houses_csv(results, filename):
         i += 1
 
     f.close()
+
 
 def normalize_dataframe(df, subjects):
     for col in subjects:
@@ -155,6 +136,7 @@ def normalize_dataframe(df, subjects):
 
     return df
 
+
 def main():
     if len(sys.argv) != 2:
         print(f"Usage: python3 {os.path.basename(__file__)} <dataset.csv>")
@@ -175,7 +157,6 @@ def main():
         return
     print("Weights loaded successfully")
 
-    # df = df.select_dtypes(include="number").drop(columns="Index")
     features_df = df.drop(columns=IGNORED_COLUMNS)
     features_df = replace_nan_by_mean(features_df)
     features_df = normalize_dataframe(features_df, SUBJECTS)
@@ -186,8 +167,8 @@ def main():
     for h in HOUSE_TO_LABEL:
         i = 0
         for stud in students_scores:
-             results[i][h] = predict(weights[h], stud)
-             i = i + 1 
+            results[i][h] = predict(weights[h], stud)
+            i = i + 1
 
     print(results)
     write_houses_csv(results, "houses.csv")

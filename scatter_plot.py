@@ -6,14 +6,16 @@ import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 
-FEATURES = ["Astronomy", "Defense Against the Dark Arts"]
+from dslr import (
+    EXPECTED_COLUMNS,
+    HOUSE_COLORS,
+    HOUSE_TO_LABEL,
+    IGNORED_COLUMNS,
+    PATH_WEIGHT,
+    SUBJECTS,
+)
 
-HOUSE_COLORS = {
-    "Ravenclaw": "blue",
-    "Slytherin": "green",
-    "Gryffindor": "red",
-    "Hufflepuff": "yellow",
-}
+FEATURES = ["Astronomy", "Defense Against the Dark Arts"]
 
 
 def main():

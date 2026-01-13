@@ -1,9 +1,15 @@
+#!/usr/bin/env python
+
+
 import sys
+
 import pandas as pd
+
 
 def usage():
     print("Usage: python3 evaluate.py <dataset.csv> <houses.csv>")
     sys.exit(1)
+
 
 def main():
     if len(sys.argv) != 3:
@@ -48,6 +54,7 @@ def main():
     print("Correct predictions:", correct)
     print("Total:", total)
     print("Accuracy: {:.2f}%".format(accuracy))
+
 
 if __name__ == "__main__":
     main()

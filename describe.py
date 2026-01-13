@@ -1,27 +1,18 @@
+#!/usr/bin/env python
+
+
 import sys
+
 import pandas as pd
 
-EXPECTED_COLUMNS = [
-    "Index", "Hogwarts House", "First Name", "Last Name",
-    "Birthday", "Best Hand",
-    "Arithmancy", "Astronomy", "Herbology",
-    "Defense Against the Dark Arts", "Divination",
-    "Muggle Studies", "Ancient Runes", "History of Magic",
-    "Transfiguration", "Potions",
-    "Care of Magical Creatures", "Charms", "Flying"
-]
+from dslr import EXPECTED_COLUMNS, IGNORED_COLUMNS, STAT_NAMES
 
-IGNORED_COLUMNS = [
-    "Index", "Hogwarts House", "First Name",
-    "Last Name", "Birthday", "Best Hand"
-]
-
-STAT_NAMES = ["Count", "Mean", "Std", "Min", "25%", "50%", "75%", "Max"]
 
 def calcul_percentile(values, p, n):
     sorted_values = sorted(values)
     index = int(p * (n - 1))
     return sorted_values[index]
+
 
 def calcul_std(values, mean, n):
     var_sum = 0
@@ -30,12 +21,14 @@ def calcul_std(values, mean, n):
     std = (var_sum / n) ** 0.5
     return std
 
+
 def clean_values(values):
     cleaned = []
     for v in values:
-        if v == v:   # NaN != NaN
+        if v == v:  # NaN != NaN
             cleaned.append(v)
     return cleaned
+
 
 def calcul_min_max(values):
     min_val = values[0]
@@ -46,6 +39,7 @@ def calcul_min_max(values):
         if v > max_val:
             max_val = v
     return min_val, max_val
+
 
 def calcul_mean(values):
     n = len(values)
@@ -61,6 +55,7 @@ def calcul_mean(values):
         total += v
     return total / n
 
+
 def compute_data(values):
     count = len(values)
     mean = calcul_mean(values)
@@ -70,6 +65,7 @@ def compute_data(values):
     p50 = calcul_percentile(values, 0.50, count)
     p75 = calcul_percentile(values, 0.75, count)
     return count, mean, std, min, p25, p50, p75, max
+
 
 def main():
     if len(sys.argv) != 2:
@@ -129,6 +125,7 @@ def main():
 
         print()
         i += 1
+
 
 if __name__ == "__main__":
     main()
