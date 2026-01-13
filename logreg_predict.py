@@ -68,7 +68,6 @@ def somme_pondere(weights, notes):
 def predict(weights, notes):
     sp = somme_pondere(weights, notes)
     ret = sigmoid(sp)
-    print(ret)
     return ret
 
 
@@ -170,7 +169,6 @@ def main():
             results[i][h] = predict(weights[h], stud)
             i = i + 1
 
-    print(results)
     write_houses_csv(results, "houses.csv")
 
 

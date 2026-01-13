@@ -142,7 +142,6 @@ def main():
                 weights = update_weights(weights, stud, is_good_house(h, stud[0]), rate)
         final_weights[h] = weights
 
-    print(final_weights)
     save_weights(final_weights, "save.json")
 
 
